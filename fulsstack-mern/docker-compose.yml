@@ -1,0 +1,44 @@
+services: # services: = Group of containers (apps) that work together. Each named item under services: is a container configuration. services: section is the heart of the file — it defines all the containers (apps or services) you want Docker Compose to manage together.
+  mongo: # mongo: = Name of the service (container) that runs MongoDB.
+    image: mongo # image: = Specifies the Docker image to use for this service. 
+    container_name: mongo_container # container_name: = Sets a custom name for the container. 
+    volumes:
+      - mongo_data:/data/db # named volume # volumes: = Mounts a volume to persist data. mongo_data is the name of the volume(meya api define karaganna one) , and /data/db is the path inside the container where MongoDB stores its data.
+    ports:
+      - "27017:27017" # ports: = Maps the host port 27017 to the container port 27017, allowing access to MongoDB from outside the container.
+
+  server: 
+    build: ./server # server eka build wenna awashya Dockerfile eka thiyena location eka denawa (server folder eka tyena location eke Dockerfile eka tyena nisa ema server folder eka thiyena location eka dunnama athi), kalin nam mongo ekata base image eka use kara, namuth mekata dockerfile eka use karanw 
+    container_name: server_container # Sets a custom name for the server container.
+    ports:
+      - "5000:5000"
+    depends_on: # depends_on: = Specifies that this service depends on the mongo service. It ensures that the mongo container starts before the server container.
+      - mongo # service name eka danne # server kiyanna service eka mongodb service eka matha depend wenwa, server eka hadenna nam mongodb eka run karan inna one, e kiynne database ekak tyenna one server ekata connect wenna  
+    volumes:
+      - ./server:/app # Bind Mount (Host Volume)
+      - /app/node_modules # Anonymous Volumes # volumes: = Mounts the local ./server1 directory to /app in the container, allowing live code updates. The second volume mounts the node_modules directory to avoid conflicts with host dependencies.
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/fulsstackDb     # environment varibale name  
+
+# denatamath api mongodb connect karan inne server.js walata(mongoose.connect('mongodb://localhost:27017/fulstackDbDocker'), namuth ai api mongodb walata container ekak hadaganne?, e mokada mongodb eka container ekaka run wenne, localhost eke nwey, localhost eka saha container eka kiyanne environment dekak, ema nisa api environment: use krala . 
+# environment: is used to pass key-value pairs as environment variables to the container.
+
+  client: 
+    build: ./client
+    container_name: client_container
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server # client service depends on the server service, ensuring the server is running before the client starts.
+    stdin_open: true # Useful if you want to interact with the container through a terminal or run an app that expects user input.
+    tty: true # Many programs behave differently when they detect a terminal — for example, better formatting or interactive behavior.
+    volumes:
+      - ./client:/app #Bind Mount (Host Volume)
+      - /app/node_modules # Anonymous Volumes
+
+volumes: # volumes: = Defines named volumes that can be shared between containers or persist data.
+  mongo_data: # mongo_data: = Named volume for MongoDB data storage. (api ihatha hadagatta named volume ekak, eka api sadagannwa, define karagannwa)
+
+# mongo_data:/data/db -	Tells Docker to use a named volume and mount it into /data/db inside the container.
+# volumes: mongo_data: -	This is where you define the named volume (so Docker actually creates and tracks it). 
+
